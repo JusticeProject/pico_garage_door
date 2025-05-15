@@ -4,20 +4,15 @@ from ble_uart_peripheral import BLE_UART
 
 ###############################################################################
 
-led = Pin("LED", Pin.OUT)
-led.on()
-print("Creating bluetooth device...")
-uart = BLE_UART("mpy-uart")
-print("...done")
-
-###############################################################################
-
 newChallenge = ""
 challengeSentTime = 0
+
+###############################################################################
 
 def on_rx():
     global newChallenge
     global challengeSentTime
+
     print("rx:")
     data = uart.read()
     print(data)
@@ -27,6 +22,7 @@ def on_rx():
         print(data_str)
         if (data_str == "Hello"):
             newChallenge = "decode this"
+            uart.write(newChallenge)
             challengeSentTime = time.time()
             led.off()
         elif (data_str == "world"):
@@ -36,7 +32,16 @@ def on_rx():
         print("could not decode")
         led.off()
 
+###############################################################################
+
+led = Pin("LED", Pin.OUT)
+led.off()
+print("Creating bluetooth device...")
+uart = BLE_UART("mpy-uart")
 uart.set_rx_callback(handler=on_rx)
+print("...done")
+
+###############################################################################
 
 try:
     while True:
@@ -45,8 +50,6 @@ try:
         # check if we timed out
         if (now - challengeSentTime > 20):
             newChallenge = ""
-        elif (len(newChallenge) > 0):
-            uart.write(newChallenge)
         time.sleep_ms(1000)
 except KeyboardInterrupt:
     pass

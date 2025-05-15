@@ -83,7 +83,7 @@ class BLE_UART:
 
     def write(self, data):
         for conn_handle in self.__connections:
-            self.__ble.gatts_notify(conn_handle, self.__tx_handle, data)
+            self.__ble.gatts_notify(conn_handle, self.__tx_handle, data) # type: ignore
 
     def close(self):
         for conn_handle in self.__connections:
@@ -91,5 +91,5 @@ class BLE_UART:
         self.__connections.clear()
 
     def __advertise(self, interval_us=500000):
-        self.__ble.gap_advertise(interval_us, adv_data=self.__payload)
+        self.__ble.gap_advertise(interval_us, adv_data=self.__payload) # type: ignore
 
