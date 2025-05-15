@@ -48,19 +48,25 @@ class BLE_UART:
         self.__ble.gatts_set_buffer(self.__rx_handle, rxbuf, True)
         self.__connections = set()
         self.__rx_buffer = bytearray()
-        self.__handler = None
+        self.__connect_handler = None
+        self.__rx_handler = None
         # Optionally add services=[_UART_UUID], but this is likely to make the payload too large.
         self.__payload = advertising_payload(name=name, appearance=_ADV_APPEARANCE_GENERIC_COMPUTER)
         self.__advertise()
 
+    def set_connect_callback(self, handler):
+        self.__connect_handler = handler
+
     def set_rx_callback(self, handler):
-        self.__handler = handler
+        self.__rx_handler = handler
 
     def __irq(self, event, data):
         # Track connections so we can send notifications.
         if event == _IRQ_CENTRAL_CONNECT:
-            conn_handle, _, _ = data
+            conn_handle, _, addr = data
             self.__connections.add(conn_handle)
+            if self.__connect_handler:
+                self.__connect_handler(addr)
         elif event == _IRQ_CENTRAL_DISCONNECT:
             conn_handle, _, _ = data
             if conn_handle in self.__connections:
@@ -71,8 +77,8 @@ class BLE_UART:
             conn_handle, value_handle = data
             if conn_handle in self.__connections and value_handle == self.__rx_handle:
                 self.__rx_buffer += self.__ble.gatts_read(self.__rx_handle)
-                if self.__handler:
-                    self.__handler()
+                if self.__rx_handler:
+                    self.__rx_handler()
 
     def read(self, sz=None):
         if not sz:

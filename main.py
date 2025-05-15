@@ -1,4 +1,5 @@
 import time
+import random
 from machine import Pin
 from ble_uart_peripheral import BLE_UART
 
@@ -6,6 +7,12 @@ from ble_uart_peripheral import BLE_UART
 
 newChallenge = ""
 challengeSentTime = 0
+
+###############################################################################
+
+def on_connection(addr):
+    print("connection from", addr)
+    random.seed(time.time())
 
 ###############################################################################
 
@@ -40,8 +47,9 @@ def on_rx():
 led = Pin("LED", Pin.OUT)
 led.off()
 print("Creating bluetooth device...")
-uart = BLE_UART("mpy-uart")
-uart.set_rx_callback(handler=on_rx)
+uart = BLE_UART("picow")
+uart.set_connect_callback(on_connection)
+uart.set_rx_callback(on_rx)
 print("...done")
 
 ###############################################################################
