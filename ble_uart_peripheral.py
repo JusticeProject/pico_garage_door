@@ -39,7 +39,7 @@ _ADV_APPEARANCE_GENERIC_COMPUTER = const(128)
 ###############################################################################
 
 class BLE_UART:
-    def __init__(self, name, rxbuf=100):
+    def __init__(self, name, rxbuf=128):
         self.__ble = bluetooth.BLE()
         self.__ble.active(True)
         self.__ble.irq(self.__irq)

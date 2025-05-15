@@ -17,6 +17,9 @@ def on_rx():
     data = uart.read()
     print(data)
     print(len(data))
+    #for val in data:
+    #    print(val)
+    # if len is 5 then it's probably a request for a challenge, else check if it's the right block size for AES
     try:
         data_str = data.decode()
         print(data_str)
@@ -50,6 +53,7 @@ try:
         # check if we timed out
         if (now - challengeSentTime > 20):
             newChallenge = ""
+        #uart.write(bytes((1,2,3,4)))
         time.sleep_ms(1000)
 except KeyboardInterrupt:
     pass
