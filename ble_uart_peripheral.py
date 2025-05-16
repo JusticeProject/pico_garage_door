@@ -49,6 +49,7 @@ class BLE_UART:
         self.__connections = set()
         self.__rx_buffer = bytearray()
         self.__connect_handler = None
+        self.__disconnect_handler = None
         self.__rx_handler = None
         # Optionally add services=[_UART_UUID], but this is likely to make the payload too large.
         self.__payload = advertising_payload(name=name, appearance=_ADV_APPEARANCE_GENERIC_COMPUTER)
@@ -56,6 +57,9 @@ class BLE_UART:
 
     def set_connect_callback(self, handler):
         self.__connect_handler = handler
+    
+    def set_disconnect_callback(self, handler):
+        self.__disconnect_handler = handler
 
     def set_rx_callback(self, handler):
         self.__rx_handler = handler
@@ -68,9 +72,11 @@ class BLE_UART:
             if self.__connect_handler:
                 self.__connect_handler(addr)
         elif event == _IRQ_CENTRAL_DISCONNECT:
-            conn_handle, _, _ = data
+            conn_handle, _, addr = data
             if conn_handle in self.__connections:
                 self.__connections.remove(conn_handle)
+            if self.__disconnect_handler:
+                self.__disconnect_handler(addr)
             # Start advertising again to allow a new connection.
             self.__advertise()
         elif event == _IRQ_GATTS_WRITE:

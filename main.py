@@ -16,6 +16,11 @@ def on_connection(addr):
 
 ###############################################################################
 
+def on_disconnect(addr):
+    print("disconnect from", addr)
+
+###############################################################################
+
 def on_rx():
     global newChallenge
     global challengeSentTime
@@ -49,6 +54,7 @@ led.off()
 print("Creating bluetooth device...")
 uart = BLE_UART("picow")
 uart.set_connect_callback(on_connection)
+uart.set_disconnect_callback(on_disconnect)
 uart.set_rx_callback(on_rx)
 print("...done")
 
