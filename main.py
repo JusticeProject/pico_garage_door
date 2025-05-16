@@ -5,7 +5,7 @@ from ble_uart_peripheral import BLE_UART
 
 ###############################################################################
 
-newChallenge = ""
+newChallenge = b""
 challengeSentTime = 0
 
 ###############################################################################
@@ -21,16 +21,28 @@ def on_disconnect(addr):
 
 ###############################################################################
 
+def manipulateBytes(data):
+    newData = []
+    for i in range(0, len(data)):
+        newByte = data[i] + i + 1
+        if (newByte > 255):
+            newByte -= 255
+        newData.append(newByte)
+    return bytes(newData)
+
+###############################################################################
+
 def createChallenge():
-    data = [random.randint(0, 255) for i in range(0, 128)]
-    return bytes(data)
+    challengeList = [random.randint(0, 255) for i in range(0, 128)]
+    challenge = bytes(challengeList)
+    return challenge
 
 ###############################################################################
 
 def verifyChallenge(challenge, response):
-    #for val in data:
-    #    print(val)
-    if (challenge == response):
+    expected = manipulateBytes(challenge)
+
+    if (expected == response):
         return True
     else:
         return False
@@ -54,8 +66,9 @@ def on_rx():
         verified = verifyChallenge(newChallenge, data)
         if verified:
             led.on()
-            newChallenge = ""
+            newChallenge = b""
         else:
+            print("Challenge failed")
             led.off()
     else:
         print("Unknown data")
@@ -79,8 +92,9 @@ try:
         now = time.time()
         
         # check if we timed out
-        if (now - challengeSentTime > 20):
-            newChallenge = ""
+        if (len(newChallenge) > 0) and (now - challengeSentTime > 20):
+            print("Challenge timed out")
+            newChallenge = b""
         #uart.write(bytes((1,2,3,4)))
         time.sleep_ms(1000)
 except KeyboardInterrupt:

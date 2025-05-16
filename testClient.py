@@ -21,8 +21,14 @@ def decryptFromPicoW(cipherText):
 
 ###############################################################################
 
-def manipulateBytes(byteData):
-    return byteData
+def manipulateBytes(data):
+    newData = []
+    for i in range(0, len(data)):
+        newByte = data[i] + i + 1
+        if (newByte > 255):
+            newByte -= 255
+        newData.append(newByte)
+    return bytes(newData)
 
 ###############################################################################
 
