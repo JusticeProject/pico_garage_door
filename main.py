@@ -21,30 +21,44 @@ def on_disconnect(addr):
 
 ###############################################################################
 
+def createChallenge():
+    data = [random.randint(0, 255) for i in range(0, 128)]
+    return bytes(data)
+
+###############################################################################
+
+def verifyChallenge(challenge, response):
+    #for val in data:
+    #    print(val)
+    if (challenge == response):
+        return True
+    else:
+        return False
+
+###############################################################################
+
 def on_rx():
     global newChallenge
     global challengeSentTime
 
-    print("rx:")
     data = uart.read()
-    print(data)
     print(len(data))
-    #for val in data:
-    #    print(val)
-    # if len is 5 then it's probably a request for a challenge, else check if it's the right block size for AES
-    try:
-        data_str = data.decode()
-        print(data_str)
-        if (data_str == "Hello"):
-            newChallenge = "decode this"
-            uart.write(newChallenge)
-            challengeSentTime = time.time()
-            led.off()
-        elif (data_str == "world"):
+
+    # if len is 5 then it's probably a request for a challenge, else check if it's the right block size for our AES data
+    if (len(data) == 5) and (data == b"Knock"):
+        newChallenge = createChallenge()
+        uart.write(newChallenge)
+        challengeSentTime = time.time()
+        led.off()
+    elif (len(data) == 128):
+        verified = verifyChallenge(newChallenge, data)
+        if verified:
             led.on()
             newChallenge = ""
-    except UnicodeError as e:
-        print("could not decode")
+        else:
+            led.off()
+    else:
+        print("Unknown data")
         led.off()
 
 ###############################################################################

@@ -6,21 +6,38 @@ import asyncio
 
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-import binascii
 
 ###############################################################################
 
 # Note: they are reversed from ble_uart_peripheral.py
 UART_TX_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 UART_RX_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+recvdData = b""
+
+###############################################################################
+
+def decryptFromPicoW(cipherText):
+    return cipherText
+
+###############################################################################
+
+def manipulateBytes(byteData):
+    return byteData
+
+###############################################################################
+
+def encryptToPicoW(plainText):
+    return plainText
 
 ###############################################################################
 
 def on_rx(sender, data):
     print("on_rx:")
-    print(sender)
-    print(data)
-    # TODO: do the encryption here or in main loop?
+    #print(sender)
+    #print(data)
+    print(len(data))
+    global recvdData
+    recvdData = data
 
 ###############################################################################
 
@@ -35,19 +52,23 @@ async def run(address, loop):
 
     await client.start_notify(UART_RX_UUID, on_rx)
     await asyncio.sleep(1)
-    await client.write_gatt_char(UART_TX_UUID, b"Hello")
+    await client.write_gatt_char(UART_TX_UUID, b"Knock")
 
-    await asyncio.sleep(2)
-    await client.disconnect()
-    return
+    global recvdData
+    while True:
+        if len(recvdData) > 0:
+            plainText = decryptFromPicoW(recvdData)
+            newPlainText = manipulateBytes(plainText)
+            newCipherText = encryptToPicoW(newPlainText)
+            await client.write_gatt_char(UART_TX_UUID, newCipherText)
+            await asyncio.sleep(1)
+            await client.disconnect()
+            return
+        else:
+            await asyncio.sleep(1)
 
-    while True : 
+###############################################################################
 
-        #give some time to do other tasks
-        await asyncio.sleep(0.01)
-
-
-#this is MAC of our BLE device
 address = ("2C:CF:67:D9:A4:59")
 loop = asyncio.get_event_loop()
 loop.run_until_complete(run(address, loop))
@@ -55,8 +76,9 @@ loop.run_until_complete(run(address, loop))
 ###############################################################################
 
 # to generate a new key:
-#preshared_key = get_random_bytes(32) # key must be 32 bytes = 256 bits
-#print(preshared_key)
+preshared_key = get_random_bytes(32) # key must be 32 bytes = 256 bits
+print("New AES key generated:")
+print(preshared_key)
 
 # this is one example key that was generated
 preshared_key = b"\x07\x8b\xf07\x1b\x94\xbfz=\xfa&D\xa2\x07\x0e\x00\x81~\x83\x96\xe5.j\x19'\x9f\r?\xa9\xbb\x00h"
@@ -65,15 +87,10 @@ plaintext = "Hello world!!!!!Hello world!!!!!Hello world!!!!!Hello world!!!!!" #
 print(len(plaintext))
 ciphertext = encrypter.encrypt(plaintext.encode())
 print(len(ciphertext))
-ciphertext_base64 = binascii.b2a_base64(ciphertext)
-print(len(ciphertext_base64))
-print(ciphertext_base64)
+print(ciphertext)
 
-# this is the encrypted result in base64
-# b'vjEXib4g3H9EEzqc6/StRL4xF4m+INx/RBM6nOv0rUS+MReJviDcf0QTOpzr9K1EvjEXib4g3H9EEzqc6/StRA==\n'
 
 decrypter = AES.new(preshared_key, AES.MODE_ECB)
-ciphertext = binascii.a2b_base64(ciphertext_base64)
 plaintext = decrypter.decrypt(ciphertext)
 print(plaintext.decode())
 
