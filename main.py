@@ -1,5 +1,6 @@
 import time
 import random
+import ucryptolib
 from machine import Pin
 from ble_uart_peripheral import BLE_UART
 
@@ -7,6 +8,8 @@ from ble_uart_peripheral import BLE_UART
 
 newChallenge = b""
 challengeSentTime = 0
+# This is just one example AES key. To generate a new one that is not committed to GitHub repo then run testClient.py
+preshared_key = b"\x07\x8b\xf07\x1b\x94\xbfz=\xfa&D\xa2\x07\x0e\x00\x81~\x83\x96\xe5.j\x19'\x9f\r?\xa9\xbb\x00h"
 
 ###############################################################################
 
@@ -21,6 +24,15 @@ def on_disconnect(addr):
 
 ###############################################################################
 
+def encryptChallenge(plaintext):
+    # ECB is not very secure in most applications since you can detect repeated patterns
+    encrypter = ucryptolib.aes(preshared_key, 1)
+    # must encrypt a block size modulo 16 bytes
+    ciphertext = encrypter.encrypt(plaintext)
+    return ciphertext
+
+###############################################################################
+
 def manipulateBytes(data):
     newData = []
     for i in range(0, len(data)):
@@ -29,6 +41,13 @@ def manipulateBytes(data):
             newByte -= 255
         newData.append(newByte)
     return bytes(newData)
+
+###############################################################################
+
+def decryptResponse(ciphertext):
+    decrypter = ucryptolib.aes(preshared_key, 1)
+    plaintext = decrypter.decrypt(ciphertext)
+    return plaintext
 
 ###############################################################################
 
@@ -41,8 +60,9 @@ def createChallenge():
 
 def verifyChallenge(challenge, response):
     expected = manipulateBytes(challenge)
+    decrypted = decryptResponse(response)
 
-    if (expected == response):
+    if (expected == decrypted):
         return True
     else:
         return False
@@ -59,7 +79,8 @@ def on_rx():
     # if len is 5 then it's probably a request for a challenge, else check if it's the right block size for our AES data
     if (len(data) == 5) and (data == b"Knock"):
         newChallenge = createChallenge()
-        uart.write(newChallenge)
+        ciphertext = encryptChallenge(newChallenge)
+        uart.write(ciphertext)
         challengeSentTime = time.time()
         led.off()
     elif (len(data) == 128):
