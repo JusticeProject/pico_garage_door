@@ -1,11 +1,61 @@
 # pip install pycryptodome
+# pip install bleak
+
+from bleak import BleakClient
+import asyncio
 
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import binascii
 
+###############################################################################
+
+# Note: they are reversed from ble_uart_peripheral.py
+UART_TX_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+UART_RX_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+
+###############################################################################
+
+def on_rx(sender, data):
+    print("on_rx:")
+    print(sender)
+    print(data)
+    # TODO: do the encryption here or in main loop?
+
+###############################################################################
+
+# if program crashes before disconnecting then run:
+# bluetoothctl
+# disconnect 2C:CF:67:D9:A4:59
+
+async def run(address, loop):
+    client = BleakClient(address, loop=loop)
+    await client.connect()
+    print(f"Connected: {client.is_connected}")
+
+    await client.start_notify(UART_RX_UUID, on_rx)
+    await asyncio.sleep(1)
+    await client.write_gatt_char(UART_TX_UUID, b"Hello")
+
+    await asyncio.sleep(2)
+    await client.disconnect()
+    return
+
+    while True : 
+
+        #give some time to do other tasks
+        await asyncio.sleep(0.01)
+
+
+#this is MAC of our BLE device
+address = ("2C:CF:67:D9:A4:59")
+loop = asyncio.get_event_loop()
+loop.run_until_complete(run(address, loop))
+
+###############################################################################
+
 # to generate a new key:
-#preshared_key = get_random_bytes(32) # key must be 32 bytes
+#preshared_key = get_random_bytes(32) # key must be 32 bytes = 256 bits
 #print(preshared_key)
 
 # this is one example key that was generated
