@@ -49,8 +49,8 @@ def on_rx(sender, data):
 
 ###############################################################################
 
-# This script is meant to be run on Linux. It connects to the MAC address listed
-# below which is the known MAC address of our PicoW.
+# This script is meant to be run on Linux. It requires BLE. It connects to 
+# the MAC address listed below which is the known MAC address of our PicoW.
 # If the script crashes before disconnecting then run on the Linux cmd line:
 # bluetoothctl
 # disconnect 2C:CF:67:D9:A4:59
