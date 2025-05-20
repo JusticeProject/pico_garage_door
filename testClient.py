@@ -43,26 +43,27 @@ def encryptToPicoW(plainText):
 ###############################################################################
 
 def on_rx(sender, data):
-    print("on_rx:")
-    #print(sender)
-    #print(data)
-    print(len(data))
+    print(f"on_rx got {len(data)} bytes")
     global recvdData
     recvdData = data
 
 ###############################################################################
 
-# if program crashes before disconnecting then run:
+# This script is meant to be run on Linux. It connects to the MAC address listed
+# below which is the known MAC address of our PicoW.
+# If the script crashes before disconnecting then run on the Linux cmd line:
 # bluetoothctl
 # disconnect 2C:CF:67:D9:A4:59
 
-async def run(address, loop):
-    client = BleakClient(address, loop=loop)
+async def mainLoop():
+    loop = asyncio.get_running_loop()
+    client = BleakClient("2C:CF:67:D9:A4:59", loop=loop)
+    print("Connecting...")
     await client.connect()
-    print(f"Connected: {client.is_connected}")
+    print(f"...connected: {client.is_connected}")
 
     await client.start_notify(UART_RX_UUID, on_rx)
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.01)
     await client.write_gatt_char(UART_TX_UUID, b"Knock")
 
     global recvdData
@@ -72,17 +73,14 @@ async def run(address, loop):
             newPlainText = manipulateBytes(plainText)
             newCipherText = encryptToPicoW(newPlainText)
             await client.write_gatt_char(UART_TX_UUID, newCipherText)
-            await asyncio.sleep(1)
             await client.disconnect()
             return
         else:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.01)
 
 ###############################################################################
 
-address = ("2C:CF:67:D9:A4:59")
-loop = asyncio.get_event_loop()
-loop.run_until_complete(run(address, loop))
+asyncio.run(mainLoop())
 
 ###############################################################################
 

@@ -100,7 +100,7 @@ def on_rx():
 led = Pin("LED", Pin.OUT)
 led.off()
 print("Creating bluetooth device...")
-uart = BLE_UART("picow")
+uart = BLE_UART("pico_w")
 uart.set_connect_callback(on_connection)
 uart.set_disconnect_callback(on_disconnect)
 uart.set_rx_callback(on_rx)
