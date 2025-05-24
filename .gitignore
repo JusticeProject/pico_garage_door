@@ -1,1 +1,3 @@
 .vscode
+/test_dart/.dart_tool
+test_dart/ciphertext.bin
