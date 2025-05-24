@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
-
 // see https://pub.dev/packages/pointycastle
 
 //*************************************************************************************************
@@ -31,6 +30,12 @@ void main()
 
 void verifyEqualLists(Uint8List first, Uint8List second)
 {
+  if (first.length != second.length)
+  {
+    print("lists have different lengths!");
+    return;
+  }
+
   bool equal = true;
 
   for (int i = 0; i < first.length; i++)
@@ -66,6 +71,13 @@ Uint8List decryptFromPicoW(Uint8List key, Uint8List cipherText)
   }
 
   return plainText;
+}
+
+//*************************************************************************************************
+
+void manipulateBytes()
+{
+  // TODO:
 }
 
 //*************************************************************************************************
