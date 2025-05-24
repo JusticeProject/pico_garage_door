@@ -7,9 +7,8 @@ print(server_addr_port)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
  
 # Send request to the server
-request_message = "SEND DATA"
-client_socket.sendto(request_message.encode(), server_addr_port)
+client_socket.sendto(b"Knock", server_addr_port)
 
 # Receive data from the server
 data, addr = client_socket.recvfrom(1024)
-print('Received data:', data.decode())
+print(f"Received {len(data)} bytes")
