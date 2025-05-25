@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
@@ -9,51 +10,78 @@ const keyBytes = [7,139,240,55,27,148,191,122,61,250,38,68,162,7,14,0,129,126,13
 
 //*************************************************************************************************
 
-void main()
+void main() async
 {
   Uint8List presharedKey = Uint8List.fromList(keyBytes);
   print("key length = ${presharedKey.length}");
   print(presharedKey);
 
-  File cipherTextFile = File("ciphertext.bin");
-  Uint8List cipherText = cipherTextFile.readAsBytesSync();
-  print("ciphertext length = ${cipherText.length}");
+  String addr = await lookupHostname("picow.local");
+  print("found address for PicoW: $addr");
+  if (addr.isEmpty)
+  {
+    addr = "192.168.1.160";
+  }
 
-  Uint8List plainText = decryptFromPicoW(presharedKey, cipherText);
-  prettyPrint(plainText);
-
-  Uint8List check = encryptToPicoW(presharedKey, plainText);
-  verifyEqualLists(cipherText, check);
+  await sendCmd(addr, presharedKey);
 }
 
 //*************************************************************************************************
 
-void verifyEqualLists(Uint8List first, Uint8List second)
+Future<String> lookupHostname(String hostname) async
 {
-  if (first.length != second.length)
+  try
   {
-    print("lists have different lengths!");
-    return;
+    List<InternetAddress> addrs = await InternetAddress.lookup(hostname, type: InternetAddressType.IPv4);
+    return addrs.first.address;
   }
-
-  bool equal = true;
-
-  for (int i = 0; i < first.length; i++)
+  on Exception catch (e)
   {
-    if (first[i] != second[i])
+    print(e);
+    return "";
+  }
+}
+
+//*************************************************************************************************
+
+// from https://api.dart.dev/dart-io/RawDatagramSocket-class.html
+Future<void> sendCmd(String addr, Uint8List key) async
+{
+  final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+  
+  List<int> asciiValues = "Knock".codeUnits;
+  Uint8List knockPacket = Uint8List.fromList(asciiValues);
+  print(knockPacket);
+
+  int bytesWritten = clientSocket.send(knockPacket, InternetAddress(addr), 12345);
+  print("wrote $bytesWritten bytes");
+
+  clientSocket.listen((event)
+  {
+    switch (event)
     {
-      equal = false;
+      case RawSocketEvent.read:
+        final datagram = clientSocket.receive();
+        print("read event:");
+        print("${datagram!.data.length} bytes");
+        Uint8List cipherText = datagram.data;
+        Uint8List plainText = decryptFromPicoW(key, cipherText);
+        Uint8List newPlainText = manipulateBytes(plainText);
+        Uint8List newCipherText = encryptToPicoW(key, newPlainText);
+        int bytesWritten = clientSocket.send(newCipherText, InternetAddress(addr), 12345);
+        print("wrote $bytesWritten bytes");
+        clientSocket.close();
+        break;
+      case RawSocketEvent.write:
+        print("write event");
+        break;
+      case RawSocketEvent.closed:
+        print("closed event");
+        break;
+      default:
+        print("unexpected event $event");
     }
-  }
-
-  if (equal)
-  {
-    print("equal");
-  }
-  else
-  {
-    print("not equal");
-  }
+  });
 }
 
 //*************************************************************************************************
@@ -75,9 +103,19 @@ Uint8List decryptFromPicoW(Uint8List key, Uint8List cipherText)
 
 //*************************************************************************************************
 
-void manipulateBytes()
+Uint8List manipulateBytes(Uint8List input)
 {
-  // TODO:
+  //Uint8List output = Uint8List(input.length);
+  for (int i = 0; i < input.length; i++)
+  {
+    int number = input[i] + i + 1;
+    if (number > 255)
+    {
+      number -= 255;
+    }
+    input[i] = number;
+  }
+  return input;
 }
 
 //*************************************************************************************************
@@ -95,13 +133,4 @@ Uint8List encryptToPicoW(Uint8List key, Uint8List plainText)
   }
 
   return cipherText;
-}
-
-//*************************************************************************************************
-
-void prettyPrint(Uint8List data)
-{
-  String stringData = String.fromCharCodes(data);
-  print("stringData length = ${stringData.length}");
-  print(stringData);
 }
