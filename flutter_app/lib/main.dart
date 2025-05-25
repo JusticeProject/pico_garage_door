@@ -45,6 +45,8 @@ class _MyHomePageState extends State<MyHomePage>
 {
   final _textController = TextEditingController();
 
+  //*********************************************
+
   @override
   void dispose()
   {
@@ -52,19 +54,24 @@ class _MyHomePageState extends State<MyHomePage>
     super.dispose();
   }
 
+  //*********************************************
+
   void _onOpenPressed()
   {
 
   }
 
+  //*********************************************
+
   void _onScanPressed() async
   {
+    // TODO: remove print statements
     print("Before scan, text field = ${_textController.text}");
 
     String addr = await utilities.lookupHostname("raspberrypi.local");
     if (addr.isEmpty)
     {
-      addr = "?";
+      addr = "Not found";
     }
 
     print("Found addr = $addr");
@@ -78,6 +85,8 @@ class _MyHomePageState extends State<MyHomePage>
       _textController.text = addr;
     });
   }
+
+  //*********************************************
 
   @override
   Widget build(BuildContext context)
@@ -93,21 +102,14 @@ class _MyHomePageState extends State<MyHomePage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            ElevatedButton(onPressed: _onOpenPressed, child: Text("Open / Close Door")),
-            SizedBox(height: 20),
-            SizedBox(
-              width: 200,
-              child: TextField(
-                controller: _textController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "IP Address",
-                ),
+            SizedBox(height: 75, child: FilledButton(onPressed: _onOpenPressed, child: Text("Open / Close Door"))),
+            SizedBox(height: 40),
+            SizedBox(width: 200,
+              child: TextField(controller: _textController, decoration: InputDecoration(border: OutlineInputBorder(), labelText: "IP Address"),
               ),
             ),
-            SizedBox(height: 40),
-            //Text('$_counter', style: Theme.of(context).textTheme.headlineMedium),
-            ElevatedButton(onPressed: _onScanPressed, child: Text("Scan for PicoW"))
+            SizedBox(height: 50),
+            SizedBox(height: 60, child: ElevatedButton(onPressed: _onScanPressed, child: Text("Scan for PicoW")))
           ],
         ),
       ),
