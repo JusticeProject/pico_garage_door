@@ -15,12 +15,24 @@ void main() async
   print("key length = ${presharedKey.length}");
   print(presharedKey);
 
-  String addr = await lookupHostname("picow.local");
-  print("found address for PicoW: $addr");
+  String addr = "";
+  for (int i = 0; i < 10; i++)
+  {
+    addr = await lookupHostname("picow.local");
+    if (addr.isNotEmpty)
+    {
+      break;
+    }
+  }
+
+  // if it's still empty, use the default address
   if (addr.isEmpty)
   {
+    print("using default address");
     addr = "192.168.1.160";
   }
+
+  print("found address for PicoW: $addr");
 
   await sendCmd(addr, presharedKey);
 }
