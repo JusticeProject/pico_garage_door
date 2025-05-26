@@ -28,6 +28,8 @@ class MyApp extends StatelessWidget
 }
 
 //*************************************************************************************************
+//*************************************************************************************************
+//*************************************************************************************************
 
 class MyHomePage extends StatefulWidget
 {
@@ -40,10 +42,13 @@ class MyHomePage extends StatefulWidget
 }
 
 //*************************************************************************************************
+//*************************************************************************************************
+//*************************************************************************************************
 
 class _MyHomePageState extends State<MyHomePage>
 {
   final _textController = TextEditingController();
+  bool _buttonsEnabled = true;
 
   //*********************************************
 
@@ -56,19 +61,30 @@ class _MyHomePageState extends State<MyHomePage>
 
   //*********************************************
 
-  void _onOpenPressed()
+  void _onOpenPressed() async
   {
+    setState((){
+      _buttonsEnabled = false;
+    });
 
+    String addr = _textController.text;
+    await utilities.sendCmd(addr);
+
+    setState((){
+      _buttonsEnabled = true;
+    });
   }
 
   //*********************************************
 
   void _onScanPressed() async
   {
-    // TODO: remove print statements
-    print("Before scan, text field = ${_textController.text}");
+    setState((){
+      _buttonsEnabled = false;
+      _textController.clear();
+    });
 
-    String addr = await utilities.lookupHostname("raspberrypi.local");
+    String addr = await utilities.lookupHostname("picow.local");
     if (addr.isEmpty)
     {
       addr = "Not found";
@@ -82,6 +98,7 @@ class _MyHomePageState extends State<MyHomePage>
     // the variable without calling setState(), then the build method would not be
     // called again, and so nothing would appear to happen.
     setState(() {
+      _buttonsEnabled = true;
       _textController.text = addr;
     });
   }
@@ -102,14 +119,14 @@ class _MyHomePageState extends State<MyHomePage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SizedBox(height: 75, child: FilledButton(onPressed: _onOpenPressed, child: Text("Open / Close Door"))),
+            SizedBox(height: 75, child: FilledButton(onPressed: _buttonsEnabled ? _onOpenPressed : null, child: Text("Open / Close Door"))),
             SizedBox(height: 40),
             SizedBox(width: 200,
               child: TextField(controller: _textController, decoration: InputDecoration(border: OutlineInputBorder(), labelText: "IP Address"),
               ),
             ),
             SizedBox(height: 50),
-            SizedBox(height: 60, child: ElevatedButton(onPressed: _onScanPressed, child: Text("Scan for PicoW")))
+            SizedBox(height: 60, child: ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: Text("Scan for PicoW")))
           ],
         ),
       ),

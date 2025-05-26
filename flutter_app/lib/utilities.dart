@@ -9,36 +9,6 @@ const keyBytes = [7,139,240,55,27,148,191,122,61,250,38,68,162,7,14,0,129,126,13
 
 //*************************************************************************************************
 
-/*void main() async
-{
-  Uint8List presharedKey = Uint8List.fromList(keyBytes);
-  print("key length = ${presharedKey.length}");
-  print(presharedKey);
-
-  String addr = "";
-  for (int i = 0; i < 10; i++)
-  {
-    addr = await lookupHostname("picow.local");
-    if (addr.isNotEmpty)
-    {
-      break;
-    }
-  }
-
-  // if it's still empty, use the default address
-  if (addr.isEmpty)
-  {
-    print("using default address");
-    addr = "192.168.1.160";
-  }
-
-  print("found address for PicoW: $addr");
-
-  await sendCmd(addr, presharedKey);
-}*/
-
-//*************************************************************************************************
-
 Future<String> lookupHostname(String hostname) async
 {
   try
@@ -56,8 +26,9 @@ Future<String> lookupHostname(String hostname) async
 //*************************************************************************************************
 
 // from https://api.dart.dev/dart-io/RawDatagramSocket-class.html
-Future<void> sendCmd(String addr, Uint8List key) async
+Future<void> sendCmd(String addr) async
 {
+  Uint8List key = Uint8List.fromList(keyBytes);
   final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
   
   List<int> asciiValues = "Knock".codeUnits;
