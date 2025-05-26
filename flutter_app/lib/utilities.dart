@@ -26,7 +26,7 @@ Future<String> lookupHostname(String hostname) async
 //*************************************************************************************************
 
 // from https://api.dart.dev/dart-io/RawDatagramSocket-class.html
-Future<void> sendCmd(String addr) async
+Future<void> sendCmd(String addr, Function notifyUI) async
 {
   Uint8List key = Uint8List.fromList(keyBytes);
   final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
@@ -86,6 +86,7 @@ Future<void> sendCmd(String addr) async
   void onDone()
   {
     print("onDone");
+    notifyUI();
   }
 
   //*********************************************

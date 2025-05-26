@@ -68,8 +68,18 @@ class _MyHomePageState extends State<MyHomePage>
     });
 
     String addr = _textController.text;
-    await utilities.sendCmd(addr);
+    await utilities.sendCmd(addr, onOpenDone).catchError((err) 
+      {
+        // TODO: need to notify user, probably bad IP address
+        print("caught error: $err");
+        onOpenDone();
+      });
+  }
 
+  //*********************************************
+
+  void onOpenDone()
+  {
     setState((){
       _buttonsEnabled = true;
     });
