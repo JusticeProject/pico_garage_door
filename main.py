@@ -86,7 +86,7 @@ print(wlan.ifconfig())
 
 # Set up UDP server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server_socket.bind((wlan.ifconfig()[0], 12345))
+server_socket.bind((wlan.ifconfig()[0], 17812))
 print("Server is Up and Listening")
 print(wlan.ifconfig()[0])
 
@@ -110,8 +110,8 @@ try:
             print("Challenge timed out")
             newChallenge = b""
         
-        # if len is 5 then it's probably a request for a challenge, else check if it's the right block size for our AES data
-        if (len(data) == 5) and (data == b"Knock"):
+        # if len is 10 then it's probably a request for a challenge, else check if it's the right block size for our AES data
+        if (len(data) == 10) and (data == b"KnockKnock"):
             newChallenge = createChallenge()
             ciphertext = encryptChallenge(newChallenge)
             server_socket.sendto(ciphertext, client_address)

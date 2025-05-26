@@ -38,7 +38,9 @@ Future<String> lookupHostname(String hostname) async
 // from https://api.dart.dev/dart-io/RawDatagramSocket-class.html
 Future<void> sendCmd(String addr) async
 {
-  Uint8List key = Uint8List.fromList(keyBytes);
+  final Uint8List key = Uint8List.fromList(keyBytes);
+  const int port = 17812;
+
   final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
   final timedSocket = clientSocket.timeout(Duration(seconds: 3), onTimeout: (sink) {
     logDebugMsg("timeout");
@@ -49,9 +51,9 @@ Future<void> sendCmd(String addr) async
   });
   
   // send the initial Knock packet
-  List<int> asciiValues = "Knock".codeUnits;
+  List<int> asciiValues = "KnockKnock".codeUnits;
   Uint8List knockPacket = Uint8List.fromList(asciiValues);
-  int bytesWritten = clientSocket.send(knockPacket, InternetAddress(addr), 12345);
+  int bytesWritten = clientSocket.send(knockPacket, InternetAddress(addr), port);
   logDebugMsg("wrote $bytesWritten bytes");
 
   //*********************************************
@@ -75,7 +77,7 @@ Future<void> sendCmd(String addr) async
           Uint8List plainText = decryptFromPicoW(key, cipherText);
           Uint8List newPlainText = manipulateBytes(plainText);
           Uint8List newCipherText = encryptToPicoW(key, newPlainText);
-          int bytesWritten = clientSocket.send(newCipherText, InternetAddress(addr), 12345);
+          int bytesWritten = clientSocket.send(newCipherText, InternetAddress(addr), port);
           logDebugMsg("wrote $bytesWritten bytes");
         }
         clientSocket.close();
