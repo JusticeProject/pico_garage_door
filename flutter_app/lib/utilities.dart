@@ -26,7 +26,7 @@ Future<String> lookupHostname(String hostname) async
 //*************************************************************************************************
 
 // from https://api.dart.dev/dart-io/RawDatagramSocket-class.html
-Future<void> sendCmd(String addr, Function notifyUI) async
+Future<void> sendCmd(String addr) async
 {
   Uint8List key = Uint8List.fromList(keyBytes);
   final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
@@ -83,16 +83,11 @@ Future<void> sendCmd(String addr, Function notifyUI) async
 
   //*********************************************
 
-  void onDone()
-  {
-    print("onDone");
-    notifyUI();
-  }
-
-  //*********************************************
-
-  // register the callback created above
-  timedSocket.listen(onData, onDone: onDone);
+  // register the callback created above and wait for the data
+  // from https://stackoverflow.com/questions/68527608/dart-socket-listen-doesnt-wait-until-done
+  var subscription = timedSocket.listen(onData);
+  await subscription.asFuture<void>();
+  print("done listening");
 }
 
 //*************************************************************************************************
