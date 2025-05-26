@@ -30,28 +30,44 @@ Future<void> sendCmd(String addr) async
 {
   Uint8List key = Uint8List.fromList(keyBytes);
   final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+  final timedSocket = clientSocket.timeout(Duration(seconds: 3), onTimeout: (sink) {
+    print("timeout");
+    //sink.close(); // this will close the socket, and onDone will be called
+
+    // add another read event that the clientSocket can see, although there won't be any data to go with it
+    sink.add(RawSocketEvent.read);
+  });
   
+  // send the initial Knock packet
   List<int> asciiValues = "Knock".codeUnits;
   Uint8List knockPacket = Uint8List.fromList(asciiValues);
-  print(knockPacket);
-
   int bytesWritten = clientSocket.send(knockPacket, InternetAddress(addr), 12345);
   print("wrote $bytesWritten bytes");
 
-  clientSocket.listen((event)
+  //*********************************************
+
+  // setup the callback for when data arrives
+  void onData(RawSocketEvent event)
   {
+    print("onData");
     switch (event)
     {
       case RawSocketEvent.read:
         final datagram = clientSocket.receive();
-        print("read event:");
-        print("${datagram!.data.length} bytes");
-        Uint8List cipherText = datagram.data;
-        Uint8List plainText = decryptFromPicoW(key, cipherText);
-        Uint8List newPlainText = manipulateBytes(plainText);
-        Uint8List newCipherText = encryptToPicoW(key, newPlainText);
-        int bytesWritten = clientSocket.send(newCipherText, InternetAddress(addr), 12345);
-        print("wrote $bytesWritten bytes");
+        if (datagram == null)
+        {
+          print("read event: no data");
+        }
+        else
+        {
+          print("read event: ${datagram.data.length} bytes");
+          Uint8List cipherText = datagram.data;
+          Uint8List plainText = decryptFromPicoW(key, cipherText);
+          Uint8List newPlainText = manipulateBytes(plainText);
+          Uint8List newCipherText = encryptToPicoW(key, newPlainText);
+          int bytesWritten = clientSocket.send(newCipherText, InternetAddress(addr), 12345);
+          print("wrote $bytesWritten bytes");
+        }
         clientSocket.close();
         break;
       case RawSocketEvent.write:
@@ -63,7 +79,19 @@ Future<void> sendCmd(String addr) async
       default:
         print("unexpected event $event");
     }
-  });
+  }
+
+  //*********************************************
+
+  void onDone()
+  {
+    print("onDone");
+  }
+
+  //*********************************************
+
+  // register the callback created above
+  timedSocket.listen(onData, onDone: onDone);
 }
 
 //*************************************************************************************************
