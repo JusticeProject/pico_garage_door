@@ -1,11 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
 // see https://pub.dev/packages/pointycastle
 
 //*************************************************************************************************
 
 const keyBytes = [7,139,240,55,27,148,191,122,61,250,38,68,162,7,14,0,129,126,131,150,229,46,106,25,39,159,13,63,169,187,0,104,];
+
+//*************************************************************************************************
+
+void logDebugMsg(String msg)
+{
+  if (kDebugMode)
+  {
+    print(msg);
+  }
+}
 
 //*************************************************************************************************
 
@@ -18,7 +28,7 @@ Future<String> lookupHostname(String hostname) async
   }
   on Exception catch (e)
   {
-    print(e);
+    logDebugMsg(e.toString());
     return "";
   }
 }
@@ -31,7 +41,7 @@ Future<void> sendCmd(String addr) async
   Uint8List key = Uint8List.fromList(keyBytes);
   final clientSocket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
   final timedSocket = clientSocket.timeout(Duration(seconds: 3), onTimeout: (sink) {
-    print("timeout");
+    logDebugMsg("timeout");
     //sink.close(); // this will close the socket, and onDone will be called
 
     // add another read event that the clientSocket can see, although there won't be any data to go with it
@@ -42,42 +52,42 @@ Future<void> sendCmd(String addr) async
   List<int> asciiValues = "Knock".codeUnits;
   Uint8List knockPacket = Uint8List.fromList(asciiValues);
   int bytesWritten = clientSocket.send(knockPacket, InternetAddress(addr), 12345);
-  print("wrote $bytesWritten bytes");
+  logDebugMsg("wrote $bytesWritten bytes");
 
   //*********************************************
 
   // setup the callback for when data arrives
   void onData(RawSocketEvent event)
   {
-    print("onData");
+    logDebugMsg("onData");
     switch (event)
     {
       case RawSocketEvent.read:
         final datagram = clientSocket.receive();
         if (datagram == null)
         {
-          print("read event: no data");
+          logDebugMsg("read event: no data");
         }
         else
         {
-          print("read event: ${datagram.data.length} bytes");
+          logDebugMsg("read event: ${datagram.data.length} bytes");
           Uint8List cipherText = datagram.data;
           Uint8List plainText = decryptFromPicoW(key, cipherText);
           Uint8List newPlainText = manipulateBytes(plainText);
           Uint8List newCipherText = encryptToPicoW(key, newPlainText);
           int bytesWritten = clientSocket.send(newCipherText, InternetAddress(addr), 12345);
-          print("wrote $bytesWritten bytes");
+          logDebugMsg("wrote $bytesWritten bytes");
         }
         clientSocket.close();
         break;
       case RawSocketEvent.write:
-        print("write event");
+        logDebugMsg("write event");
         break;
       case RawSocketEvent.closed:
-        print("closed event");
+        logDebugMsg("closed event");
         break;
       default:
-        print("unexpected event $event");
+        logDebugMsg("unexpected event $event");
     }
   }
 
@@ -87,7 +97,7 @@ Future<void> sendCmd(String addr) async
   // from https://stackoverflow.com/questions/68527608/dart-socket-listen-doesnt-wait-until-done
   var subscription = timedSocket.listen(onData);
   await subscription.asFuture<void>();
-  print("done listening");
+  logDebugMsg("done listening");
 }
 
 //*************************************************************************************************

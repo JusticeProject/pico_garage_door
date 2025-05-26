@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget
     return MaterialApp(
       title: 'Garage Door Opener',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
       ),
       home: const MyHomePage(title: 'Pico Garage Door Opener'),
     );
@@ -68,10 +68,9 @@ class _MyHomePageState extends State<MyHomePage>
     });
 
     String addr = _textController.text;
-    await utilities.sendCmd(addr).catchError((err) 
+    await utilities.sendCmd(addr).catchError((err)
       {
-        // TODO: need to notify user, probably bad IP address
-        print("caught error: $err");
+        utilities.logDebugMsg("caught error: $err");
       });
 
     setState((){
@@ -91,11 +90,10 @@ class _MyHomePageState extends State<MyHomePage>
     String addr = await utilities.lookupHostname("picow.local");
     if (addr.isEmpty)
     {
-      addr = "Not found";
+      addr = "PicoW not found";
     }
 
-    print("Found addr = $addr");
-    // TODO: do I need to put setState() around this? It seems to work without it.
+    utilities.logDebugMsg("Found addr = $addr");
     // This call to setState tells the Flutter framework that something has
     // changed in this State, which causes it to rerun the build method below
     // so that the display can reflect the updated values. If we changed
@@ -129,16 +127,19 @@ class _MyHomePageState extends State<MyHomePage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SizedBox(height: 75, 
-              child: FilledButton(onPressed: _buttonsEnabled ? _onOpenPressed : null, child: Text("Open / Close Door", style: onPrimary))),
+            SizedBox(height: 75, child: 
+              FilledButton(onPressed: _buttonsEnabled ? _onOpenPressed : null, child: 
+                Text("Open / Close Door", style: onPrimary))),
             SizedBox(height: 40),
-            SizedBox(width: 200,
-              child: TextField(controller: _textController, decoration: InputDecoration(border: OutlineInputBorder(), labelText: "IP Address"),
+            SizedBox(width: 250, child: 
+              TextField(style: primary, controller: _textController, decoration: 
+                InputDecoration(border: OutlineInputBorder(), labelText: "IP Address"),
               ),
             ),
             SizedBox(height: 50),
-            SizedBox(height: 60, 
-              child: ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: Text("Scan for PicoW", style: _buttonsEnabled ? primary : onPrimary)))
+            SizedBox(height: 60, child: 
+              ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: 
+                Text("Scan for PicoW", style: _buttonsEnabled ? primary : onPrimary)))
           ],
         ),
       ),
