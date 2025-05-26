@@ -120,9 +120,9 @@ class _MyHomePageState extends State<MyHomePage>
   {
     final theme = Theme.of(context);
     // a color that's legible when drawn on primary color (green):
-    final filledStyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.onPrimary);
+    final onPrimary = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.onPrimary);
     // the primary color:
-    final elevatedStyle = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
+    final primary = theme.textTheme.headlineMedium!.copyWith(color: theme.colorScheme.primary);
     
     return Scaffold(
       appBar: AppBar(
@@ -136,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox(height: 75, 
-              child: FilledButton(onPressed: _buttonsEnabled ? _onOpenPressed : null, child: Text("Open / Close Door", style: filledStyle))),
+              child: FilledButton(onPressed: _buttonsEnabled ? _onOpenPressed : null, child: Text("Open / Close Door", style: onPrimary))),
             SizedBox(height: 40),
             SizedBox(width: 200,
               child: TextField(controller: _textController, decoration: InputDecoration(border: OutlineInputBorder(), labelText: "IP Address"),
@@ -144,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage>
             ),
             SizedBox(height: 50),
             SizedBox(height: 60, 
-              child: ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: Text("Scan for PicoW", style: elevatedStyle)))
+              child: ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: Text("Scan for PicoW", style: _buttonsEnabled ? primary : onPrimary)))
           ],
         ),
       ),
