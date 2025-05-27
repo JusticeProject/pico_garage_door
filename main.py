@@ -132,7 +132,7 @@ try:
             verified = verifyChallenge(newChallenge, data)
             if verified:
                 opto.on()
-                time.sleep_ms(250)
+                time.sleep(1)
                 opto.off()
                 flashLED(led, 1)
                 newChallenge = b""
