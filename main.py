@@ -89,6 +89,7 @@ wlan.connect(secrets.SSID, secrets.PASSWORD)
  
 # Wait for connection
 while not wlan.isconnected():
+    flashLED(led, 1)
     time.sleep(1)   
 #print(wlan.ifconfig())
 
@@ -99,6 +100,7 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind((wlan.ifconfig()[0], 17812))
 #print(wlan.ifconfig()[0])
 
+flashLED(led, 4)
 led.off()
 random.seed(time.time())
 
@@ -134,8 +136,10 @@ try:
                 flashLED(led, 1)
                 newChallenge = b""
             else:
+                # challenge failed
                 flashLED(led, 2)
         else:
+            # unknown data
             flashLED(led, 3)
 
 except KeyboardInterrupt:
