@@ -68,10 +68,14 @@ class _MyHomePageState extends State<MyHomePage>
     });
 
     String addr = _textController.text;
-    await utilities.sendCmd(addr).catchError((err)
-      {
-        utilities.logDebugMsg("caught error: $err");
-      });
+    try
+    {
+      await utilities.sendCmd(addr);
+    }
+    catch (err)
+    {
+      utilities.logDebugMsg("caught error: $err");
+    }  
 
     setState((){
       _buttonsEnabled = true;
