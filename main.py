@@ -81,6 +81,7 @@ opto.off()
 
 ###############################################################################
 
+time.sleep(1)
 network.country("US") # or import rp2  then rp2.country("US")
 network.hostname("picow")
 wlan = network.WLAN(network.STA_IF)
