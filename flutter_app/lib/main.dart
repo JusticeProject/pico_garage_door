@@ -111,6 +111,15 @@ class _MyHomePageState extends State<MyHomePage>
 
   //*********************************************
 
+  void _onDefaultIP()
+  {
+    setState((){
+      _textController.text = "192.168.1.160";
+    });
+  }
+
+  //*********************************************
+
   @override
   Widget build(BuildContext context)
   {
@@ -143,7 +152,11 @@ class _MyHomePageState extends State<MyHomePage>
             SizedBox(height: 50),
             SizedBox(height: 60, child: 
               ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: 
-                Text("Scan for PicoW", style: _buttonsEnabled ? primary : onPrimary)))
+                Text("Scan for PicoW", style: _buttonsEnabled ? primary : onPrimary))),
+            SizedBox(height: 30),
+            SizedBox(height: 60, child: 
+              ElevatedButton(onPressed: _buttonsEnabled ? _onDefaultIP : null, child:
+                Text("Default IP", style: _buttonsEnabled ? primary : onPrimary)))
           ],
         ),
       ),
