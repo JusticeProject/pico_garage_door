@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:pointycastle/export.dart';
+import 'package:http/http.dart' as http;
 // see https://pub.dev/packages/pointycastle
 
 //*************************************************************************************************
@@ -21,8 +22,58 @@ void logDebugMsg(String msg)
 
 Future<String> lookupHostname(String hostname) async
 {
-  List<InternetAddress> addrs = await InternetAddress.lookup(hostname, type: InternetAddressType.IPv4);
-  return addrs.first.address;
+  try
+  {
+    // first try using the operating system's main DNS lookup
+    List<InternetAddress> addrs = await InternetAddress.lookup(hostname, type: InternetAddressType.IPv4);
+    return addrs.first.address;
+  }
+  catch (err)
+  {
+    logDebugMsg("caught exception: ${err.toString()}");
+  }
+
+  // if the above method failed, check the router's web server page which normally lists all the devices it has seen
+  String addr = await askRouterForIP(hostname);
+  return addr;
+}
+
+//*************************************************************************************************
+
+Future<String> askRouterForIP(String hostname) async
+{
+  var response = await http.get(Uri.parse("http://192.168.1.254/cgi-bin/devices.ha"));
+  String html = response.body;
+
+  hostname = hostname.replaceAll(".local", "");
+ 
+  //    Use raw strings so we can use \ instead of \\
+  //    \b means word boundary, it detects a boundary between \w and \W, it does not capture any chars for the group
+  //    \d means any number 0-9
+  //    + means one or more
+  RegExp nameRegExp = RegExp(hostname + r"\b");
+  RegExp ipRegExp = RegExp(r"\d+.\d+.\d+.\d+");
+ 
+  // the html has a lot of table rows, so look at one table row at a time
+  List<String> lines = html.split("<tr>");
+  for (String line in lines)
+  {
+    if (nameRegExp.hasMatch(line))
+    {
+      logDebugMsg("found $hostname in router's table, looking for IP address...");
+
+      // we found the hostname, but we need to make sure there is also an IP address
+      RegExpMatch? ipMatch = ipRegExp.firstMatch(line);
+      String? ipAddr = ipMatch?[0];
+      if (ipAddr != null)
+      {
+        logDebugMsg("RegExp found IP address: $ipAddr");
+        return ipAddr;
+      }
+    }
+  }
+
+  throw Exception("Could not find hostname in router's table");
 }
 
 //*************************************************************************************************
