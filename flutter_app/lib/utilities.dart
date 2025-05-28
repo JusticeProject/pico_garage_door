@@ -21,16 +21,8 @@ void logDebugMsg(String msg)
 
 Future<String> lookupHostname(String hostname) async
 {
-  try
-  {
-    List<InternetAddress> addrs = await InternetAddress.lookup(hostname, type: InternetAddressType.IPv4);
-    return addrs.first.address;
-  }
-  on Exception catch (e)
-  {
-    logDebugMsg(e.toString());
-    return "";
-  }
+  List<InternetAddress> addrs = await InternetAddress.lookup(hostname, type: InternetAddressType.IPv4);
+  return addrs.first.address;
 }
 
 //*************************************************************************************************

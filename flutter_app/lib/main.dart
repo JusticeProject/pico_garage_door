@@ -4,25 +4,27 @@ import 'utilities.dart' as utilities;
 //*************************************************************************************************
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 //*************************************************************************************************
 
 class MyApp extends StatelessWidget
 {
-  const MyApp({super.key});
+  MyApp({super.key});
+  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context)
   {
     return MaterialApp(
+      scaffoldMessengerKey: _scaffoldMessengerKey,
       title: 'Garage Door Opener',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
       ),
-      home: const MyHomePage(title: 'Pico Garage Door Opener'),
+      home: MyHomePage(title: 'Pico Garage Door Opener', scaffoldMessengerKey: _scaffoldMessengerKey),
     );
   }
 }
@@ -33,9 +35,12 @@ class MyApp extends StatelessWidget
 
 class MyHomePage extends StatefulWidget
 {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.scaffoldMessengerKey});
 
   final String title;
+  // this scaffold messenger key is used to show the SnackBar (toast) outside of a build function since otherwise 
+  // we would need the BuildContext
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -61,6 +66,14 @@ class _MyHomePageState extends State<MyHomePage>
 
   //*********************************************
 
+  void _showMessageToUser(String msg)
+  {
+    // widget in this case refers to the corresponding StatefulWidget
+    widget.scaffoldMessengerKey.currentState!.showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  //*********************************************
+
   void _onOpenPressed() async
   {
     setState((){
@@ -74,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage>
     }
     catch (err)
     {
+      _showMessageToUser(err.toString());
       utilities.logDebugMsg("caught error: $err");
     }  
 
@@ -91,13 +105,18 @@ class _MyHomePageState extends State<MyHomePage>
       _textController.clear();
     });
 
-    String addr = await utilities.lookupHostname("picow.local");
-    if (addr.isEmpty)
+    try
     {
-      addr = "PicoW not found";
+      String addr = await utilities.lookupHostname("picow.local");
+      utilities.logDebugMsg("Found addr = $addr");
+      _textController.text = addr;
+    }
+    catch (err)
+    {
+      _showMessageToUser(err.toString());
+      utilities.logDebugMsg(err.toString());
     }
 
-    utilities.logDebugMsg("Found addr = $addr");
     // This call to setState tells the Flutter framework that something has
     // changed in this State, which causes it to rerun the build method below
     // so that the display can reflect the updated values. If we changed
@@ -105,7 +124,6 @@ class _MyHomePageState extends State<MyHomePage>
     // called again, and so nothing would appear to happen.
     setState(() {
       _buttonsEnabled = true;
-      _textController.text = addr;
     });
   }
 
@@ -113,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   void _onDefaultIP()
   {
+    // not sure if setState is actually needed here
     setState((){
       _textController.text = "192.168.1.160";
     });
