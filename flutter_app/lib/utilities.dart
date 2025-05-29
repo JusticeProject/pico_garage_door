@@ -24,8 +24,9 @@ Future<String> lookupHostname(String hostname) async
 {
   try
   {
-    // first try using the operating system's main DNS lookup
-    List<InternetAddress> addrs = await InternetAddress.lookup(hostname, type: InternetAddressType.IPv4);
+    // first try the operating system's main DNS lookup to find hostname.local
+    List<InternetAddress> addrs = await InternetAddress.lookup("$hostname.local", type: InternetAddressType.IPv4);
+    logDebugMsg("found IP address using .local");
     return addrs.first.address;
   }
   catch (err)
@@ -33,7 +34,19 @@ Future<String> lookupHostname(String hostname) async
     logDebugMsg("caught exception: ${err.toString()}");
   }
 
-  // if the above method failed, check the router's web server page which normally lists all the devices it has seen
+  try
+  {
+    // next try the operating system's main DNS lookup to find hostname.attlocal.net, the router seems to prefer this
+    List<InternetAddress> addrs = await InternetAddress.lookup("$hostname.attlocal.net", type: InternetAddressType.IPv4);
+    logDebugMsg("found IP address using .attlocal.net");
+    return addrs.first.address;
+  }
+  catch (err)
+  {
+    logDebugMsg("caught exception: ${err.toString()}");
+  }
+
+  // if the above methods failed, check the router's web server page which lists all the devices it has seen recently
   String addr = await askRouterForIP(hostname);
   return addr;
 }
@@ -44,8 +57,6 @@ Future<String> askRouterForIP(String hostname) async
 {
   var response = await http.get(Uri.parse("http://192.168.1.254/cgi-bin/devices.ha"));
   String html = response.body;
-
-  hostname = hostname.replaceAll(".local", "");
  
   //    Use raw strings so we can use \ instead of \\
   //    \b means word boundary, it detects a boundary between \w and \W, it does not capture any chars for the group

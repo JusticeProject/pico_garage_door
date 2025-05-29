@@ -107,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage>
 
     try
     {
-      String addr = await utilities.lookupHostname("picow.local");
+      String addr = await utilities.lookupHostname("picow");
       utilities.logDebugMsg("Found addr = $addr");
       _textController.text = addr;
     }
@@ -162,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage>
             SizedBox(height: 60, child: 
               ElevatedButton(onPressed: _buttonsEnabled ? _onScanPressed : null, child: 
                 Text("Scan for PicoW", style: _buttonsEnabled ? primary : onPrimary))),
+            SizedBox(height: 50)
           ],
         ),
       ),
